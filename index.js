@@ -10,26 +10,43 @@ const cheerio = require('cheerio')
 //creates an express application ex: app.use
 const app = express()
 const products = []
+const reviews =[]
 
 //homepage path
 app.get('/', (req,res) => {
     res.json('Welcome to my Etsy API')
 })
 
-app.get('/items', (req,res) => {
-    
+//Etsy displays the featured items first in a shop
+app.get('/featuredItems', (req,res) => {
     axios.get('https://www.etsy.com/ca/shop/TheNeedleNanny?ref=simple-shop-header-name&listing_id=1159865656')
     .then((response) => {
         const html = response.data
         const $ = cheerio.load(html)
-        $('a.listing-link', html).each(function () {
+        $('div.featured-listings a', html).each(function () {
             const item  = $(this).attr('title')
             const url =$(this).attr('href')
+            const img = $('div.featured-listings img').attr('src')
             products.push({
                 item,
-                url
+                url,
+                img
             })
+        })
+        res.json(products)
+    }).catch((err) => console.log(err))
+})
 
+app.get('/reviews', (req,res) => {
+    axios.get('https://www.etsy.com/ca/shop/TheNeedleNanny?ref=simple-shop-header-name&listing_id=1159865656')
+    .then((response) => {
+        const html = response.data
+        const $ = cheerio.load(html)
+        $('div.review-item .screen-reader-only', html).each(function () {
+            const stars  = $(this).text
+            products.push({
+                stars
+            })
         })
         res.json(products)
     }).catch((err) => console.log(err))
